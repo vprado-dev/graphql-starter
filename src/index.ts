@@ -4,30 +4,43 @@ dotenv.config();
 
 import express from 'express';
 import cors from 'cors';
-import { json } from 'body-parser';
 import { readdirSync } from 'fs';
 import { join } from 'path';
-import morgan from 'morgan';
 import { notFound } from './middlewares/notFound';
 import { exception } from './middlewares/exception';
+import { ApolloServer } from 'apollo-server-express';
+
+const typeDefsFiles = readdirSync(join(__dirname, 'typeDefs'));
+const typeDefs = [];
+
+for (const file of typeDefsFiles) {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  typeDefs.push(require(join(__dirname, 'typeDefs', file)).typeDefs);
+}
+
+const resolversFiles = readdirSync(join(__dirname, 'resolvers'));
+const resolvers = [];
+
+for (const file of resolversFiles) {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  resolvers.push(require(join(__dirname, 'resolvers', file)).resolvers);
+}
+
+const server = new ApolloServer({ typeDefs, resolvers });
 
 const app = express();
 
 app.use(cors());
-app.use(json());
-app.use(morgan('dev'));
 
-const routes = readdirSync(join(__dirname, 'routes'));
+(async () => {
+  await server.start();
+  server.applyMiddleware({ app });
 
-for (const route of routes) {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  app.use(require(join(__dirname, 'routes', route)).default);
-}
+  app.use(exception);
 
-app.use(exception);
+  app.use(notFound);
 
-app.use(notFound);
-
-app.listen(process.env.PORT, () =>
-  console.log(`Listening at http://localhost:${process.env.PORT}`),
-);
+  app.listen(process.env.PORT, () =>
+    console.log(`Listening at http://localhost:${process.env.PORT}`),
+  );
+})();
