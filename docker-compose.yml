@@ -1,10 +1,27 @@
-version: "3"
-services: 
-  api: 
+version: '3'
+services:
+  api:
     build: .
-    ports: 
+    ports:
       - $PORT:$PORT
     environment:
       - NODE_ENV=$NODE_ENV
       - PORT=$PORT
     restart: always
+  mongo:
+    image: mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=$MONGODB_USER
+      - MONGO_INITDB_ROOT_PASSWORD=$MONGODB_PASSWORD
+    logging:
+      driver: json-file
+      options:
+        max-size: 50m
+    ports:
+      - $MONGODB_PORT:27017
+    restart: always
+    volumes:
+      - mongo_volume:/data/db
+
+volumes:
+  mongo_volume:

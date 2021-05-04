@@ -9,6 +9,8 @@ import { join } from 'path';
 import { notFound } from './middlewares/notFound';
 import { exception } from './middlewares/exception';
 import { ApolloServer } from 'apollo-server-express';
+import { connect } from '@ev-fns/mongo';
+import mongoose from 'mongoose';
 
 const typeDefsFiles = readdirSync(join(__dirname, 'typeDefs'));
 const typeDefs = [];
@@ -33,6 +35,14 @@ const app = express();
 app.use(cors());
 
 (async () => {
+  await connect(mongoose, {
+    protocol: process.env.MONGODB_PROTOCOL,
+    server: process.env.MONGODB_SERVER,
+    port: +(process.env.MONGODB_PORT || 27017),
+    user: process.env.MONGODB_USER,
+    pass: process.env.MONGODB_PASSWORD,
+    database: process.env.MONGODB_DATABASE,
+  } as any);
   await server.start();
   server.applyMiddleware({ app });
 

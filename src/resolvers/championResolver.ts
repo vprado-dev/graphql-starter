@@ -1,28 +1,16 @@
-const champions = [
-  {
-    ID: '1',
-    name: 'Draven',
-  },
-  {
-    ID: '2',
-    name: 'Lee Sin',
-  },
-];
+import { isValidObjectId } from 'mongoose';
+import { Champion } from '../models/Champion';
 
 const allChampions = () => {
-  return champions;
+  return Champion.find();
 };
 
 const champion = (_: any, { input: { ID } }: any) => {
-  return champions.find((item) => item.ID === ID);
+  return isValidObjectId(ID) ? Champion.findById(ID) : null;
 };
 
-const createChampion = (_: any, { input: { name } }: any) => {
-  const champion = {
-    ID: String(Date.now()),
-    name,
-  };
-  champions.push(champion);
+const createChampion = async (_: any, { input: { name } }: any) => {
+  const champion = await Champion.create({ name });
   return champion;
 };
 
@@ -33,5 +21,8 @@ export const resolvers = {
   },
   Mutation: {
     createChampion,
+  },
+  Champion: {
+    ID: (champion: any) => (console.log(1) as any) || champion._id,
   },
 };
